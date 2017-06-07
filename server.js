@@ -31,16 +31,22 @@ app.get("/employees", (req, res) => {
   if (req.query.status) {
     dataModule.getEmployeesByStatus(req.query.status).then((data) => {
       res.json(data);
+    }).catch((err) => {
+      res.json({message: err});
     });
 
   } else if (req.query.department) {
     dataModule.getEmployeesByDepartment(req.query.department).then((data) => {
       res.json(data);
+    }).catch((err) => {
+      res.json({message: err});
     });
 
   } else if (req.query.manager) {
     dataModule.getEmployeesByManager(req.query.manager).then((data) => {
       res.json(data);
+    }).catch((err) => {
+      res.json({message: err});
     });
     //if there are no options, display all the employees
   } else {
@@ -53,24 +59,29 @@ app.get("/employees", (req, res) => {
 app.get('/employee/:empNum', (req, res) => {
   dataModule.getEmployeeByNum(req.params.empNum).then((data) => {
     res.json(data);
-  });
+  }).catch((err) => {
+      res.json({message: err});
+    });
 });
 
 app.get("/managers", (req, res) => {
   dataModule.getManagers().then((data) => {
     res.json(data);
-  });
+  }).catch((err) => {
+      res.json({message: err});
+    });
 });
 
 app.get("/departments", (req, res) => {
 dataModule.getDepartments().then((data) => {
     res.json(data);
-  });
+  }).catch((err) => {
+      res.json({message: err});
+    });
 });
 
 app.use((req, res, next) => {
   res.status(404).send("Page Not Found");
-
 });
 
 dataModule.initialize().then(() => {
@@ -78,6 +89,6 @@ dataModule.initialize().then(() => {
     console.log("Express http server listing on " + HTTP_PORT);
   });
 }).catch((err) => {
-  res.send(err);
-});
+      res.json({message: err});
+    });
 
