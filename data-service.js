@@ -123,7 +123,7 @@ module.exports.getManagers = () => {
     let t = 0;
     return new Promise(function (resolve, reject) {
         for (let i = 0; i < employees.length; i++) {
-            if (employees[i].isManager == true) {
+            if (employees[i].isManager == true || employees[i].isManager == 'on') {  //if manager is checked 'on' during an update
                 managers[t++] = employees[i];
             }
         }
@@ -155,6 +155,17 @@ module.exports.addEmployees = function (employeeData) {
             resolve();
         } else {
             reject("No employee to add");
+        }
+    });
+};
+
+module.exports.updateEmployee = function (employeeData) {
+    return new Promise(function (resolve, reject) {
+        for (var i = 0; i < employees.length; i++) {
+            if (employees[i].employeeNum == employeeData.employeeNum){
+                employees[i] = employeeData;
+                resolve();
+            }
         }
     });
 };

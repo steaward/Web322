@@ -78,9 +78,9 @@ app.get("/employees", (req, res) => {
 
 app.get('/employee/:empNum', (req, res) => {
   dataModule.getEmployeeByNum(req.params.empNum).then((data) => {
-    res.json(data);
+    res.render("employee", { data: data });
   }).catch((err) => {
-    res.json({ message: err });
+    res.status(404).send("Employee not found");
   });
 });
 
@@ -106,6 +106,12 @@ app.get("/employees/add", (req, res) => {
 
 app.post("/employees/add", (req, res) => {
   dataModule.addEmployees(req.body).then(() => {
+    res.redirect("/employees");
+  });
+});
+
+app.post("/employee/update", (req, res) => {
+  dataModule.updateEmployee(req.body).then(() => {
     res.redirect("/employees");
   });
 });
