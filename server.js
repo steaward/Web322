@@ -14,44 +14,64 @@ var app = express();
 var path = require("path");
 var HTTP_PORT = process.env.PORT || 8080;
 var dataModule = require('./data-service.js');
+const exphbs = require('express-handlebars');
+const bodyParser = require('body-parser');
 
 app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: true }));
 
+app.engine(".hbs", exphbs({
+  extname: ".hbs",
+  defaultLayout: 'layout',
+  helpers: {
+    equal: function (lvalue, rvalue, options) {
+      if (arguments.length < 3)
+        throw new Error("Handlebars Helper equal needs 2 parameters");
+      if (lvalue != rvalue) {
+        return options.inverse(this);
+      } else {
+        return options.fn(this);
+      }
+    }
+  }
+
+}));
+app.set("view engine", "hbs");
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, './views', 'home.html'));
+  res.render("home");
 });
 
 app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, './views', 'about.html'));
+  res.render("about");
 });
 
 app.get("/employees", (req, res) => {
 
   if (req.query.status) {
     dataModule.getEmployeesByStatus(req.query.status).then((data) => {
-      res.json(data);
+      res.render("employeeList", { data: data, title: "Employees" });
     }).catch((err) => {
-      res.json({message: err});
+      res.json({ message: err });
     });
 
   } else if (req.query.department) {
     dataModule.getEmployeesByDepartment(req.query.department).then((data) => {
-      res.json(data);
+      res.render("employeeList", { data: data, title: "Employees" });
     }).catch((err) => {
-      res.json({message: err});
+      res.json({ message: err });
     });
 
   } else if (req.query.manager) {
     dataModule.getEmployeesByManager(req.query.manager).then((data) => {
-      res.json(data);
+      res.render("employeeList", { data: data, title: "Employees" });
     }).catch((err) => {
-      res.json({message: err});
+      res.json({ message: err });
     });
     //if there are no options, display all the employees
   } else {
     dataModule.getAllEmployees().then((data) => {
-      res.json(data);
+      res.render("employeeList", { data: data, title: "Employees" });
     });
   }
 });
@@ -60,24 +80,34 @@ app.get('/employee/:empNum', (req, res) => {
   dataModule.getEmployeeByNum(req.params.empNum).then((data) => {
     res.json(data);
   }).catch((err) => {
-      res.json({message: err});
-    });
+    res.json({ message: err });
+  });
 });
 
 app.get("/managers", (req, res) => {
   dataModule.getManagers().then((data) => {
-    res.json(data);
+    res.render("employeeList", { data: data, title: "Employees (Managers)" });
   }).catch((err) => {
-      res.json({message: err});
-    });
+    res.render("employeeList", { data: {}, title: "Employees (Managers)" });
+  });
 });
 
 app.get("/departments", (req, res) => {
-dataModule.getDepartments().then((data) => {
-    res.json(data);
+  dataModule.getDepartments().then((data) => {
+    res.render("departmentList", { data: data, title: "Departments" });
   }).catch((err) => {
-      res.json({message: err});
-    });
+    res.render("departmentList", { data: {}, title: "Departments" });
+  });
+});
+
+app.get("/employees/add", (req, res) => {
+  res.render("addEmployees");
+});
+
+app.post("/employees/add", (req, res) => {
+  dataModule.addEmployees(req.body).then(() => {
+    res.redirect("/employees");
+  });
 });
 
 app.use((req, res, next) => {
@@ -89,6 +119,6 @@ dataModule.initialize().then(() => {
     console.log("Express http server listing on " + HTTP_PORT);
   });
 }).catch((err) => {
-      res.json({message: err});
-    });
+  res.json({ message: err });
+});
 
