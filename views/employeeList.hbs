@@ -24,12 +24,12 @@
         {{#each data}}
         <tr> 
              <td> {{employeeNum}} </td>  
-             <td> <a href="/employee/{{employeeNum}}"> {{firstName}} {{last_name}} </td>
-             <td> <a href="mailto:{{email}}"> {{email}} </td>
-             <td> {{addressStreet}} {{addressCity}} {{addressState}} {{addressPostal}} </td>
-             <td> <a href="/employees?manager={{employeeManagerNum}}"> {{employeeManagerNum}} </td>
-             <td> <a href="/employees?status={{status}}"> {{status}} </td>
-             <td> <a href="/employees?department={{department}}"> {{department}} </td>
+             <td> <a href="/employee/{{employeeNum}}"> {{firstName}} {{last_name}}</a></td>
+             <td> <a href="mailto:{{email}}"> {{email}}</a></td>
+             <td> {{addressStreet}} {{addressCity}} {{addressState}} {{addressPostal}}</td>
+             <td> <a href="/employees?manager={{employeeManagerNum}}"> {{employeeManagerNum}}</a></td>
+             <td> <a href="/employees?status={{status}}"> {{status}}</a></td>
+             <td> <a href="/employees?department={{department}}"> {{department}}</a></td>
              <td> {{hireDate}} </td>
             </tr>
         {{/each}}
