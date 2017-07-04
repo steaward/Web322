@@ -9,15 +9,54 @@ var sequelize = new Sequelize('d72jgn62vtte9k', 'gaommmbqzmlmsi', '76ff31a72e175
         }
     });
 
+ var Employees = sequelize.define('Employees', {
+    employeeNum: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    firstName: Sequelize.STRING,
+    last_name: Sequelize.STRING,
+    email: Sequelize.STRING,
+    SSN: Sequelize.STRING,
+    addressStreet: Sequelize.STRING,
+    addressCity: Sequelize.STRING,
+    addressState: Sequelize.STRING,
+    addressPostal: Sequelize.STRING,
+    martialStatus: Sequelize.STRING,
+    isManager: Sequelize.BOOLEAN,
+    employeeManagerNum: Sequelize.INTEGER,
+    status: Sequelize.STRING,
+    department: Sequelize.INTEGER,
+    hireDate: Sequelize.STRING
+});
+
+var Departents = sequelize.define('Departments',{
+    departmentID: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    departmentName: Sequelize.STRING
+});
+
 module.exports.initialize = () => {
         return new Promise(function (resolve, reject) {
-            reject();
+            sequelize.sync().then(() => {
+                resolve('Connected to the database!');
+            }).catch(() => {
+                reject('Unable to connect to the database...');
+            });
         });
     };
 
 module.exports.getAllEmployees = () => {
     return new Promise(function (resolve, reject) {
-        reject();
+        Employees.findAll().then((Employees) => {
+            resolve(Employees);
+        }).catch(() => {
+            reject('No employees found...');
+        });
     });
 };
 
