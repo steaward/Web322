@@ -25,16 +25,13 @@ var Employees = sequelize.define('Employees', {
     addressPostal: Sequelize.STRING,
     martialStatus: Sequelize.STRING,
     isManager: Sequelize.BOOLEAN,
-    employeeManagerNum: {
-        type: Sequelize.INTEGER,
-        defaultValue: null
-    },
+    employeeManagerNum: Sequelize.INTEGER,
     status: Sequelize.STRING,
     department: Sequelize.INTEGER,
     hireDate: Sequelize.STRING
 });
 
-var Departents = sequelize.define('Departments', {
+var Departments = sequelize.define('Departments', {
     departmentID: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -148,7 +145,7 @@ module.exports.addEmployees = function (employeeData) {
         //check and set bool for isManager
         employeeData.isManager = (employeeData.isManager) ? true : false;
         for (var prop in employeeData) {
-            if (employeeData[prop] == ' ') {
+            if (employeeData[prop] == "") {
                 employeeData[prop] = null;
             }
         }
@@ -180,7 +177,7 @@ module.exports.updateEmployee = function (employeeData) {
         //check and set bool for isManager
         employeeData.isManager = (employeeData.isManager) ? true : false;
         for (var prop in employeeData) {
-            if (employeeData[prop] == ' ') {
+            if (employeeData[prop] == "") {
                 employeeData[prop] = null;
             }
         }
@@ -206,9 +203,74 @@ module.exports.updateEmployee = function (employeeData) {
             }).then(() => {
                 resolve();
             }).catch(() => {
-                reject("unable to create employee");
+                reject("unable to update employee");
             });
     });
 };
+module.exports.addDepartment = function (departmentData) {
+    return new Promise(function (resolve, reject) {
+        if (departmentData.deparmentName == "") {
+                departmentData.deparmentName = null
+        }
+        Departments.create({
+           departmentName: departmentData.departmentName
+        }).then(() => {
+            resolve();
+        }).catch(() => {
+            reject("unable to create department");
+        });
+    });
+};
+
+module.exports.updateDeparment = function (departmentData) {
+    return new Promise(function (resolve, reject) {
+        for (var prop in departmentData) {
+            if (departmentData[prop] == "") {
+                departmentData[prop] = null;
+            }
+        }
+        Departments.update({
+            departmentName: departmentData.departmentName
+        }, {
+                where:
+                { departmentID: departmentData.departmentID }
+
+            }).then(() => {
+                console.log("yes");
+                resolve();
+            }).catch(() => {
+                reject("unable to update department");
+            });
+    });
+};
+
+module.exports.getDepartmentById = (id) => {
+    return new Promise(function (resolve, reject) {
+        Departments.findAll({
+            where: {
+                departmentID: id
+            }
+        }).then(function (departments) {
+            resolve(departments[0]);
+        }).catch(() => {
+            reject('No departments found...');
+        });
+    });
+};
+
+module.exports.deleteEmployeeByNum = (num) => {
+    return new Promise(function (resolve, reject){
+        Employees.destroy({
+            where: {
+                employeeNum: num
+            }
+        }).then(() =>{
+            resolve();
+        }).catch(() =>{
+            reject("employee not deleted");
+        });
+    });
+}
+
 
 

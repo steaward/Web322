@@ -9,9 +9,9 @@
 *
 ********************************************************************************/
 
-var express = require("express");
+var express = require('express');
 var app = express();
-var path = require("path");
+var path = require('path');
 var HTTP_PORT = process.env.PORT || 8080;
 var dataModule = require('./data-service.js');
 const exphbs = require('express-handlebars');
@@ -77,10 +77,35 @@ app.get("/employees", (req, res) => {
 });
 
 app.get('/employee/:empNum', (req, res) => {
+  let viewData = {};
+
   dataModule.getEmployeeByNum(req.params.empNum).then((data) => {
-    res.render("employee", { data: data });
+    viewData.data = data;
   }).catch((err) => {
-    res.status(404).send("Employee not found");
+    viewData.data = null;
+  }).then(dataModule.getDepartments).then((data) => {
+    viewData.departments = data;
+    for (let i = 0; i < viewData.departments.length; i++) {
+      if (viewData.departments[i].departmentID == viewData.data.department) {
+        viewData.departments[i].selected = true;
+      }
+    }
+  }).catch(() => {
+    viewData.departments = [];
+  }).then(() => {
+    if (viewData.data == null) {
+      res.status(404).send("Employee not found");
+    } else {
+      res.render("employee", { viewData: viewData });
+    }
+  });
+});
+
+app.get('/department/:departmentNum', (req, res) => {
+  dataModule.getDepartmentById(req.params.departmentNum).then((data) => {
+    res.render("department", { data: data });
+  }).catch((err) => {
+    res.status(404).send("Department not found");
   });
 });
 
@@ -104,9 +129,27 @@ app.get("/employees/add", (req, res) => {
   res.render("addEmployees");
 });
 
+app.get("/departments/add", (req, res) => {
+  res.render("addDepartments");
+});
+
+app.get("/employee/delete/:empNum", (req, res) => {
+  dataModule.deleteEmployeeByNum(req.params.empNum).then(() => {
+    res.redirect("/employees")
+  }).catch(() => {
+    res.status(500).send("Unable to Remove Employee / Employee not found");
+  });
+});
+
 app.post("/employees/add", (req, res) => {
   dataModule.addEmployees(req.body).then(() => {
     res.redirect("/employees");
+  });
+});
+
+app.post("/departments/add", (req, res) => {
+  dataModule.addDepartment(req.body).then(() => {
+    res.redirect("/departments");
   });
 });
 
@@ -115,6 +158,15 @@ app.post("/employee/update", (req, res) => {
     res.redirect("/employees");
   });
 });
+
+app.post("/departments/update", (req, res) => {
+  dataModule.updateDeparment(req.body).then(() => {
+    res.redirect("/departments");
+  });
+});
+
+
+
 
 app.use((req, res, next) => {
   res.status(404).send("Page Not Found");
