@@ -125,8 +125,12 @@ app.get("/departments", (req, res) => {
   });
 });
 
-app.get("/employees/add", (req, res) => {
-  res.render("addEmployees");
+app.get("/employees/add", (req, res) =>{
+  dataModule.getDepartments().then((data) => {
+    res.render("addEmployees", {departments: data});
+  }).catch((err) => {
+    res.render("addEmployees", {departments: [] });
+  });
 });
 
 app.get("/departments/add", (req, res) => {

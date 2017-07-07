@@ -117,7 +117,7 @@ module.exports.getEmployeeByNum = (num) => {
 
 module.exports.getManagers = () => {
     return new Promise(function (resolve, reject) {
-        Employess.findAll({
+        Employees.findAll({
             where: {
                 isManager: true
             }
