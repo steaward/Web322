@@ -16,6 +16,7 @@ var HTTP_PORT = process.env.PORT || 8080;
 var dataModule = require('./data-service.js');
 const exphbs = require('express-handlebars');
 const bodyParser = require('body-parser');
+const dataServiceComments = require('./data-service-comments.js');
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -125,11 +126,11 @@ app.get("/departments", (req, res) => {
   });
 });
 
-app.get("/employees/add", (req, res) =>{
+app.get("/employees/add", (req, res) => {
   dataModule.getDepartments().then((data) => {
-    res.render("addEmployees", {departments: data});
+    res.render("addEmployees", { departments: data });
   }).catch((err) => {
-    res.render("addEmployees", {departments: [] });
+    res.render("addEmployees", { departments: [] });
   });
 });
 
@@ -176,6 +177,7 @@ app.use((req, res, next) => {
   res.status(404).send("Page Not Found");
 });
 
+/*
 dataModule.initialize().then(() => {
   app.listen(HTTP_PORT, (req, res) => {
     console.log("Express http server listing on " + HTTP_PORT);
@@ -183,6 +185,29 @@ dataModule.initialize().then(() => {
 }).catch((err) => {
   res.json({ message: err });
 });
-
+*/
+dataServiceComments.initialize()
+  .then(() => {
+    dataServiceComments.addComment({
+      authorName: "Comment 1 Author",
+      authorEmail: "comment1@mail.com",
+      subject: "Comment 1",
+      commentText: "Comment Text 1"
+    }).then((id) => {
+      dataServiceComments.addReply({
+        comment_id: id,
+        authorName: "Reply 1Author",
+        authorEmail: "reply1@mail.com",
+        commentText: "Reply Text 1"
+      }).then(dataServiceComments.getAllComments)
+        .then((data) => {
+          console.log("comment: " + data[data.length - 1]);
+          process.exit();
+        });
+    });
+  }).catch((err) => {
+    console.log("Error: " + err);
+    process.exit();
+  })
 
 
