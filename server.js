@@ -44,7 +44,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/about", (req, res) => {
-  res.render("about");
+  dataServiceComments.getAllComments().then((dataFromPromise) => {
+    res.render("about", {data: dataFromPromise});
+  }).catch(() => {
+    res.render("about");
+  });
 });
 
 app.get("/employees", (req, res) => {
@@ -170,6 +174,26 @@ app.post("/departments/update", (req, res) => {
   });
 });
 
+app.post("/about/addComment", (req, res) => {
+  dataServiceComments.addComment(req.body).then(() => {
+    console.log("here we are");
+    res.redirect("/about");
+  })
+    .catch((err) => {
+      console.log(err);
+      res.redirect("/about");
+    });
+});
+
+app.post("/about/addReply", (req, res) => {
+  dataServiceComments.addReply(req.body).then(() => {
+    res.redirect("/about");
+  })
+    .catch((err) => {
+      console.log(err);
+      res.redirect("/about");
+    });
+});
 
 
 
@@ -177,37 +201,15 @@ app.use((req, res, next) => {
   res.status(404).send("Page Not Found");
 });
 
-/*
+
 dataModule.initialize().then(() => {
+  dataServiceComments.initialize();
+}).then(() => {
   app.listen(HTTP_PORT, (req, res) => {
     console.log("Express http server listing on " + HTTP_PORT);
   });
 }).catch((err) => {
   res.json({ message: err });
 });
-*/
-dataServiceComments.initialize()
-  .then(() => {
-    dataServiceComments.addComment({
-      authorName: "Comment 1 Author",
-      authorEmail: "comment1@mail.com",
-      subject: "Comment 1",
-      commentText: "Comment Text 1"
-    }).then((id) => {
-      dataServiceComments.addReply({
-        comment_id: id,
-        authorName: "Reply 1Author",
-        authorEmail: "reply1@mail.com",
-        commentText: "Reply Text 1"
-      }).then(dataServiceComments.getAllComments)
-        .then((data) => {
-          console.log("comment: " + data[data.length - 1]);
-          process.exit();
-        });
-    });
-  }).catch((err) => {
-    console.log("Error: " + err);
-    process.exit();
-  })
 
 
