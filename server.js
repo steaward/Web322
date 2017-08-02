@@ -203,7 +203,7 @@ app.post("/login", (req, res) => {
     req.session.user = {
       user: req.body.user
     }
-    res.render("employee");
+    res.redirect("/employees");
   }).catch((err) => {
       res.render("login", {errorMessage: err, user: req.body.user});
   });
