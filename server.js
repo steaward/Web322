@@ -1,10 +1,10 @@
 /*********************************************************************************
-*  WEB322 – Assignment 05
+*  WEB322 – Assignment 07
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part
 *  of this assignment has been copied manually or electronically from any other source
 *  (including 3rd party web sites) or distributed to other students.
 *
-*  Name: Stephen Ward Student ID: 118862168 Date: 06/22/2017
+*  Name: Stephen Ward Student ID: 118862168 Date: 07/31/2017
 *  Online (Heroku) Link:  https://intense-everglades-43152.herokuapp.com/
 *
 ********************************************************************************/
@@ -17,9 +17,34 @@ var dataModule = require('./data-service.js');
 const exphbs = require('express-handlebars');
 const bodyParser = require('body-parser');
 const dataServiceComments = require('./data-service-comments.js');
+const clientSessions = require('client-sessions');
+const dataServiceAuth = require('./data-service-auth.js')
+
+function ensureLogin(req, res, next) {
+  if (!req.session.user) {
+    res.redirect("/login");
+  } else {
+    next();
+  }
+};
+
+
 
 app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(clientSessions({
+  cookieName: "session",
+  secret: "assignment7ex",
+  duration: 2 * 60 * 2000,
+  activeDuration: 1000 * 60
+}));
+
+app.use(function (req, res, next) {
+  res.locals.session = req.session;
+  next();
+});
+
 
 app.engine(".hbs", exphbs({
   extname: ".hbs",
@@ -45,13 +70,13 @@ app.get("/", (req, res) => {
 
 app.get("/about", (req, res) => {
   dataServiceComments.getAllComments().then((dataFromPromise) => {
-    res.render("about", {data: dataFromPromise});
+    res.render("about", { data: dataFromPromise });
   }).catch(() => {
     res.render("about");
   });
 });
 
-app.get("/employees", (req, res) => {
+app.get("/employees", ensureLogin, (req, res) => {
 
   if (req.query.status) {
     dataModule.getEmployeesByStatus(req.query.status).then((data) => {
@@ -81,7 +106,7 @@ app.get("/employees", (req, res) => {
   }
 });
 
-app.get('/employee/:empNum', (req, res) => {
+app.get('/employee/:empNum', ensureLogin, (req, res) => {
   let viewData = {};
 
   dataModule.getEmployeeByNum(req.params.empNum).then((data) => {
@@ -106,7 +131,7 @@ app.get('/employee/:empNum', (req, res) => {
   });
 });
 
-app.get('/department/:departmentNum', (req, res) => {
+app.get('/department/:departmentNum', ensureLogin, (req, res) => {
   dataModule.getDepartmentById(req.params.departmentNum).then((data) => {
     res.render("department", { data: data });
   }).catch((err) => {
@@ -114,7 +139,7 @@ app.get('/department/:departmentNum', (req, res) => {
   });
 });
 
-app.get("/managers", (req, res) => {
+app.get("/managers", ensureLogin, (req, res) => {
   dataModule.getManagers().then((data) => {
     res.render("employeeList", { data: data, title: "Employees (Managers)" });
   }).catch((err) => {
@@ -122,7 +147,7 @@ app.get("/managers", (req, res) => {
   });
 });
 
-app.get("/departments", (req, res) => {
+app.get("/departments", ensureLogin, (req, res) => {
   dataModule.getDepartments().then((data) => {
     res.render("departmentList", { data: data, title: "Departments" });
   }).catch((err) => {
@@ -130,7 +155,7 @@ app.get("/departments", (req, res) => {
   });
 });
 
-app.get("/employees/add", (req, res) => {
+app.get("/employees/add", ensureLogin, (req, res) => {
   dataModule.getDepartments().then((data) => {
     res.render("addEmployees", { departments: data });
   }).catch((err) => {
@@ -138,11 +163,11 @@ app.get("/employees/add", (req, res) => {
   });
 });
 
-app.get("/departments/add", (req, res) => {
+app.get("/departments/add", ensureLogin, (req, res) => {
   res.render("addDepartments");
 });
 
-app.get("/employee/delete/:empNum", (req, res) => {
+app.get("/employee/delete/:empNum", ensureLogin, (req, res) => {
   dataModule.deleteEmployeeByNum(req.params.empNum).then(() => {
     res.redirect("/employees")
   }).catch(() => {
@@ -150,25 +175,59 @@ app.get("/employee/delete/:empNum", (req, res) => {
   });
 });
 
-app.post("/employees/add", (req, res) => {
+app.get("/login", (req, res) => {
+    res.render("login");
+});
+
+app.get("/register", (req, res) => {
+    res.render("register");
+});
+
+app.get("/logout", (req, res) => {
+  req.session.reset();
+  res.redirect("/login");
+});
+
+app.post("/register", (req, res) => {
+  dataServiceAuth.registerUser(req.body)
+  .then(() => {
+    res.render("register", {successMessage: "User Created"})
+  }).catch((err)=>{
+    res.render("register", {errorMessage: err, user:req.body.user});
+  });
+});
+
+app.post("/login", (req, res) => {
+  dataServiceAuth.checkUser(req.body)
+  .then(() => {
+    req.session.user = {
+      user: req.body.user
+    }
+    res.render("employee");
+  }).catch((err) => {
+      res.render("login", {errorMessage: err, user: req.body.user});
+  });
+});
+
+app.post("/employees/add", ensureLogin, (req, res) => {
   dataModule.addEmployees(req.body).then(() => {
     res.redirect("/employees");
   });
 });
 
-app.post("/departments/add", (req, res) => {
+app.post("/departments/add", ensureLogin, (req, res) => {
   dataModule.addDepartment(req.body).then(() => {
     res.redirect("/departments");
   });
 });
 
-app.post("/employee/update", (req, res) => {
+app.post("/employee/update", ensureLogin, (req, res) => {
   dataModule.updateEmployee(req.body).then(() => {
     res.redirect("/employees");
   });
 });
 
-app.post("/departments/update", (req, res) => {
+app.post("/departments/update", ensureLogin, (req, res) => {
   dataModule.updateDeparment(req.body).then(() => {
     res.redirect("/departments");
   });
@@ -176,7 +235,6 @@ app.post("/departments/update", (req, res) => {
 
 app.post("/about/addComment", (req, res) => {
   dataServiceComments.addComment(req.body).then(() => {
-    console.log("here we are");
     res.redirect("/about");
   })
     .catch((err) => {
@@ -202,14 +260,15 @@ app.use((req, res, next) => {
 });
 
 
-dataModule.initialize().then(() => {
-  dataServiceComments.initialize();
-}).then(() => {
-  app.listen(HTTP_PORT, (req, res) => {
-    console.log("Express http server listing on " + HTTP_PORT);
+
+dataModule.initialize()
+  .then(dataServiceComments.initialize)
+  .then(dataServiceAuth.initialize)
+  .then(() => {
+    app.listen(HTTP_PORT);
+      console.log("Express http server listing on " + HTTP_PORT);
+  }).catch((err) => {
+    console.log("unable to start server");
   });
-}).catch((err) => {
-  res.json({ message: err });
-});
 
 
